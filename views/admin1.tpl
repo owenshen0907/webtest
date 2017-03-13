@@ -87,6 +87,9 @@
             {{if .IsUsers}}{{template "rootuser" .}}{{end}}
 			{{if .IsDash}}{{template "rootdash" .}}{{end}}
 			{{if .IsUsersEdit}}{{template "rootuseredit" .}}{{end}}
+            {{if .IsEditor}}{{template "editor" .}}{{end}}
+            {{if .IsClass}}{{template "class" .}}{{end}}
+            {{if .IsResource}}{{template "resource" .}}{{end}}
 			{{if .IsHelp}}{{end}}
 			{{if .IsContent}}{{end}}
 			{{if .IsArticle}}{{end}}

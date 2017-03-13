@@ -190,71 +190,76 @@ func (c *HomeController) Get() {
 func (c *AdminController) Get() {
 	//	c.Data["IsLogin"] = checkAccount()
 	//	c.Data["IsLogin"] = IsFlag
-	var tmp, CurPage string
+	//根据url选择相对应的组建--获取模块开关
+	IsUsers := c.Input().Get("IsUsers") == "1"
+	IsDash := c.Input().Get("IsDash") == "1"
+	IsUsersEdit := c.Input().Get("IsUsersEdit") == "1"
+	IsEditor := c.Input().Get("IsEditor") == "1"
+	IsClass := c.Input().Get("IsClass") == "1"
+	IsResource := c.Input().Get("IsResource") == "1"
+
+	var USERNAME,USERACCOUNT, CurPage string
 	var account, pages, lastAccount int
+	//****************8取出cookie的用户名*************
+	USERNAME = readUsrName(c)
+	sqlscript := "select name from usr_info where uid =" + "\"" + USERNAME + "\"" + ";"
+	//取用户名
+	c.Data["UsrName"], _ = models.Query(sqlscript)
+	//****************8取出用户姓名完毕****************
 
 	c.Data["IsPsw"] = c.Input().Get("IsPsw")=="1"
 	c.Data["IsPsw1"] = c.Input().Get("IsPsw1")=="1"
 
-	//idNum:默认用户id,perPeople:默认每页数据
-	idNum := 0
-	perPeople := 4
-	tmp1 := 1
-	//取出cookie的用户名
-	tmp = readUsrName(c)
-	//根据url选择相对应的组建
-	IsUsers := c.Input().Get("IsUsers") == "1"
-	IsDash := c.Input().Get("IsDash") == "1"
-	IsUsersEdit := c.Input().Get("IsUsersEdit") == "1"
-	//根据id显示用户详情
+	//***********************************根据id显示用户详情*************************
 	IsUsrId := c.Input().Get("IsUsrId")
 	if IsUsrId == "" {
-		sqlscript := "select id from usr_info where uid =" + "\"" + tmp + "\"" + ";"
+		sqlscript := "select id from usr_info where uid =" + "\"" + USERNAME + "\"" + ";"
 		IsUsrId, _ = models.Query(sqlscript)
 	}
 	script := "SELECT uid,name,tel,email FROM usr_info where id = '" + IsUsrId + "';"
-	tmp2 := models.ReadData(script)
+	tmp := models.ReadData(script)
 	//	if IsUsrId != "" {
-	c.Data["IsId"] = tmp2[0][0]
-	c.Data["IsName"] = tmp2[0][1]
-	c.Data["IsTel"] = tmp2[0][2]
-	c.Data["IsEmail"] = tmp2[0][3]
-	//	} else {
-	//		c.Data["IsId"] = "用户名"
-	//		c.Data["IsName"] = "昵称"
-	//		c.Data["IsTel"] = "电话"
-	//		c.Data["IsEmail"] = "Email"
-
-	//	}
-
-	sqlscript := "select name from usr_info where uid =" + "\"" + tmp + "\"" + ";"
-	//取用户名
-	c.Data["UsrName"], _ = models.Query(sqlscript)
-	c.Data["IsUsers"] = IsUsers
-	c.Data["IsDash"] = IsDash
-	c.Data["IsUsersEdit"] = IsUsersEdit
+	c.Data["IsId"] = tmp[0][0]
+	c.Data["IsName"] = tmp[0][1]
+	c.Data["IsTel"] = tmp[0][2]
+	c.Data["IsEmail"] = tmp[0][3]
+	//***********************************显示用户详情完毕***************************
+	//******************************************生成用户列表信息*************************************
+	//idNum:默认用户id,perPeople:默认每页数据,CurPages当前页码
+	idNum := 0
+	perPeople := 4
+	CurPages := 1
 	//取用户数量
-	tmp, _ = models.Query("select count(*) from usr_info where uid IS NOT null;")
-	c.Data["UsrAccount"] = tmp
-
+	USERACCOUNT, _ = models.Query("select count(*) from usr_info where uid IS NOT null;")
+	c.Data["UsrAccount"] = USERACCOUNT
 	//取用户数据，第i+1位用户开始，每页显示j个用户
-
 	if c.Input().Get("page") != "" {
 		CurPage = c.Input().Get("page")
 	} else {
 		CurPage = "1"
 	}
 	//当前页码
-	account, _ = strconv.Atoi(tmp)
-	tmp1, _ = strconv.Atoi(CurPage)
-	idNum = perPeople * (tmp1 - 1)
+	account, _ = strconv.Atoi(USERACCOUNT)
+	CurPages, _ = strconv.Atoi(CurPage)
+	idNum = perPeople * (CurPages - 1)
 	//总数据数，每页数据数，当前页码，原始url
-
-	c.Data["Page"], pages, lastAccount = models.GeneratePage(account, perPeople, tmp1, "/admin?IsUsers=1")
-	if tmp1 == pages {
+	c.Data["Page"], pages, lastAccount = models.GeneratePage(account, perPeople, CurPages, "/admin?IsUsers=1")
+	if CurPages == pages {
 		perPeople = lastAccount
 	}
 	c.Data["UsrInfo"] = models.GenerateUsrList(idNum, perPeople)
+	//**********************************************用户列表信息生成完毕**************************************
+
+	//************添加类****************
+	
+	//************添加类完毕*************
+	//模块开关
+	c.Data["IsUsers"] = IsUsers
+	c.Data["IsDash"] = IsDash
+	c.Data["IsUsersEdit"] = IsUsersEdit
+	c.Data["IsEditor"] = IsEditor
+	c.Data["IsClass"] = IsClass
+	c.Data["IsResource"] = IsResource
 
 	c.TplName = "admin1.tpl"
 }

@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -10,7 +11,12 @@ import (
 var db *sql.DB
 
 func init() {
-	db, _ = sql.Open("mysql", "root:owenshen123@tcp(127.0.0.1:3306)/test?charset=utf8")
+	dblogin := beego.AppConfig.String("dbuser")+":"+beego.AppConfig.String("dbpsw")+
+	"@tcp("+beego.AppConfig.String("dbhost")+":"+beego.AppConfig.String("dbport")+
+	")/"+beego.AppConfig.String("dbschema")+"?charset=utf8"
+	fmt.Println("加载数据库信息："+dblogin)
+	//db, _ = sql.Open("mysql", "root:owenshen123@tcp(127.0.0.1:3306)/test?charset=utf8")
+	db,_ = sql.Open("mysql",dblogin)
 	db.SetMaxOpenConns(2000)
 	db.SetMaxIdleConns(1000)
 	db.Ping()
