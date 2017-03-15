@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 func GeneratePage(num int, perpage int, curpage int, url string) (string, int, int) {
@@ -103,14 +104,42 @@ func GenerateUsrList(idNum int, perPage int) string {
 func GenerateUsrInfo(IsUsrId string) [][]string {
 	script := "SELECT uid,name,tel,email FROM usr_info where id = '" + IsUsrId + "';"
 	tmp := ReadData(script)
-	//	var ret bytes.Buffer = bytes.Buffer{}
-	//	for i := 0; i < len(tmp); i++ {
-	//		ret.WriteString("<tr><td>" + tmp[i][0] + "</td><td>" + tmp[i][1] + "</td><td>" + tmp[i][2] + "</td><td>" + "激活</td>" + "<td><a href=\"/admin?IsUsersEdit=1&IsUsrId=" + tmp[i][0] + "\">" + "<i class=\"fa fa-pencil\"></i></a>" + "<a href=\"#myModal\" role=\"button\" data-toggle=\"modal\"><i class=\"fa fa-trash-o\"></i></a></tr>")
-	//	}
-	//	return ret.String()
 	return tmp
 }
-func ReadData(script string) [][]string {
+func GenerateClassList()string{
+	script := "select max(c.cls_content),max(a.art_title),count(a.art_title) count_title FROM class c left join article a on c.class_id = a.class_id group by c.class_id"
+	tmp := ReadData(script)
+	//<tr>
+	//<td>基础资料{{.ClassListInfo}}</td>
+	//<td>论数据结构的重要性</td>
+	//<td>13</td>
+	//<td>
+	//<a href="#"><i  class="fa fa-trash-o"></i></a>
+	//</td>
+	//</tr>
+	var ret bytes.Buffer = bytes.Buffer{}
+	for i := 0;i<len(tmp);i++{
+		ret.WriteString("<tr><td>"+tmp[i][0]+"</td><td>"+tmp[i][1]+"</td><td>"+tmp[i][2]+"</td><tr>")
+	}
+	fmt.Println(tmp)
+	return ret.String()
+
+}
+func GenerateClass()string{
+	script := "SELECT cls_content FROM class"
+	tmp := ReadDataOne(script)
+	var ret bytes.Buffer = bytes.Buffer{}
+	////<option>分类1</option>
+
+	for i:=0 ; i< len(tmp);{
+		ret.WriteString("<option>"+tmp[i]+"</option>")
+		i++
+	}
+	//fmt.Println(tmp)
+
+	return ret.String()
+}
+func ReadData(script string) [][]string { //返回多列数据
 	var DBdata [][]string
 	rows, _ := db.Query(script)
 	columns, _ := rows.Columns()
@@ -134,4 +163,29 @@ func ReadData(script string) [][]string {
 
 	defer rows.Close()
 	return DBdata
+}
+func ReadDataOne(script string) []string { //返回一列数据
+	var tmpArr []string
+	rows, _ := db.Query(script)
+	columns, _ := rows.Columns()
+	values := make([]sql.RawBytes, len(columns))
+	scanArgs := make([]interface{}, len(values))
+	for i := range values {
+		scanArgs[i] = &values[i]
+	}
+	for rows.Next() {
+
+		_ = rows.Scan(scanArgs...)
+		for _, col := range values {
+			if col == nil {
+				tmpArr = append(tmpArr, "NULL")
+			} else {
+				tmpArr = append(tmpArr, string(col))
+			}
+		}
+		//DBdata = append(DBdata, tmpArr)
+	}
+
+	defer rows.Close()
+	return tmpArr
 }

@@ -16,6 +16,7 @@ import (
 	//	"github.com/astaxie/beego/context"
 	"regexp"
 	"strings"
+	"fmt"
 )
 
 type MainController struct {
@@ -249,10 +250,12 @@ func (c *AdminController) Get() {
 	}
 	c.Data["UsrInfo"] = models.GenerateUsrList(idNum, perPeople)
 	//**********************************************用户列表信息生成完毕**************************************
+	//**************************显示分类表*************************************
+	c.Data["ClassList"] = models.GenerateClass()
 
-	//************添加类****************
-	
-	//************添加类完毕*************
+	c.Data["ClassListInfo"] = models.GenerateClassList()
+	//**************************显示分类表结束**********************************
+
 	//模块开关
 	c.Data["IsUsers"] = IsUsers
 	c.Data["IsDash"] = IsDash
@@ -266,6 +269,7 @@ func (c *AdminController) Get() {
 func (c *AdminController) Post() {
 	//IsUserInfo := c.Input().Get("IsUserInfo")
 	//IsUserPsw := c.Input().Get("IsUserPsw")
+	//*************修改用户信息********************8
 	Uid := c.Input().Get("uid")
 	UpdataName := c.Input().Get("UpdataName")
 	UpdataTel := c.Input().Get("UpdataTel")
@@ -273,16 +277,20 @@ func (c *AdminController) Post() {
 
 	tmpUrl := "/admin?IsUsersEdit=1"
 	updataFlag := true
-	updataFlag1 := true
-
-	readPsw := c.Input().Get("Psw")
-	readPsw1 := c.Input().Get("Psw1")
-	readPsw2 := c.Input().Get("Psw2")
 
 	if UpdataEmail ==""||UpdataName==""||UpdataTel==""{
 		updataFlag = false
 	}
-
+	if updataFlag{
+		models.Update(UpdataName, UpdataTel, UpdataEmail, Uid)
+		c.Redirect("/admin?IsUsersEdit=1", 301)
+	}
+	//*************修改用户信息结束********************
+	//*********************8****修改用户密码************************************
+	readPsw := c.Input().Get("Psw")
+	readPsw1 := c.Input().Get("Psw1")
+	readPsw2 := c.Input().Get("Psw2")
+	updataFlag1 := true
 	username:= readUsrName(c)
 	sqlscript := "select psw from usr_info where uid =" + "\"" + username + "\"" + ";"
 	sourcePsw, _ := models.Query(sqlscript)
@@ -301,17 +309,21 @@ func (c *AdminController) Post() {
 	//	UpdataPsw := c.Input().Get("UpdataPsw")
 	//	var tmp string
 	//	tmp = "update usr_info set name ='" + UpdataName + "',tel='" + UpdataTel + "',email='" + UpdataEmail + "' where uid='" + Uid + "' "
-	if updataFlag{
-		models.Update(UpdataName, UpdataTel, UpdataEmail, Uid)
-		c.Redirect("/admin?IsUsersEdit=1", 301)
-	}
+
 	if updataFlag1{
 		models.UpdatePsw(readPsw2,Uid)
 		c.Redirect("/admin?IsUsersEdit=1", 301)
 	}else {
 		c.Redirect(tmpUrl,301)
 	}
+	//*****************************修改用户密码结束***********************************8
 
+	//************添加类****************
+	addClassName :=c.Input().Get("addClassName")
+	fmt.Println(addClassName)
+
+	models.InsertOne("class","cls_content",addClassName)
+	//************添加类完毕*************
 
 }
 func (c *ListController) Get() {

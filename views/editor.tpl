@@ -5,11 +5,7 @@
     <form action="localhost:8088/" method="post">
 
         <select class="form-control" STYLE="width: 21em" >
-            <option>分类1</option>
-            <option>分类2</option>
-            <option>分类3</option>
-            <option>分类4</option>
-            <option>分类5</option>
+            {{str2html .ClassList}}
         </select>
         <input type="text" class="form-control" STYLE="width: 21em"  placeholder="作者">
         <input type="text" class="form-control" STYLE="width: 21em"  placeholder="编辑">
