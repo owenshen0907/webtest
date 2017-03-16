@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"strconv"
 	"strings"
-	"fmt"
+	//"fmt"
 )
 
 func GeneratePage(num int, perpage int, curpage int, url string) (string, int, int) {
@@ -121,7 +121,7 @@ func GenerateClassList()string{
 	for i := 0;i<len(tmp);i++{
 		ret.WriteString("<tr><td>"+tmp[i][0]+"</td><td>"+tmp[i][1]+"</td><td>"+tmp[i][2]+"</td><tr>")
 	}
-	fmt.Println(tmp)
+	//fmt.Println(tmp)
 	return ret.String()
 
 }

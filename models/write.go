@@ -85,7 +85,19 @@ func Query(script string) (value string, isnull int) {
 }
 
 //更新数据
+func UpdateOne(tableName,column,values,pryKey,id string){
+	script := "UPDATE "+tableName+" SET "+column+ " =? "+"WHERE "+ pryKey+" = ?"
+	//stmt, err := db.Prepare(`UPDATE usr_info SET name=?,tel=?,email=? WHERE uid=?`)
+	stmt, err := db.Prepare(script)
+	checkErr(err)
+	//values要改的值，ID 确认这一行
+	res, err := stmt.Exec(values, id )
+	checkErr(err)
+	_, err = res.RowsAffected()
+	checkErr(err)
+}
 func Update(name, tel, email, uid string) {
+
 	stmt, err := db.Prepare(`UPDATE usr_info SET name=?,tel=?,email=? WHERE uid=?`)
 	checkErr(err)
 	res, err := stmt.Exec(name, tel, email, uid)
@@ -105,10 +117,12 @@ func UpdatePsw(psw,uid string)  {
 }
 
 //删除数据
-func Remove() {
-	stmt, err := db.Prepare(`DELETE FROM user WHERE user_id=?`)
+func Remove(tableName,key,values string) {
+	//stmt, err := db.Prepare(`DELETE FROM user WHERE user_id=?`)
+	script := "DELETE FROM "+tableName+" WHERE "+key+" =?"
+	stmt, err := db.Prepare(script)
 	checkErr(err)
-	res, err := stmt.Exec(1)
+	res, err := stmt.Exec(values)
 	checkErr(err)
 	num, err := res.RowsAffected()
 	checkErr(err)

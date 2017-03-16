@@ -8,7 +8,7 @@ import (
 	//"net/http"
 	"strconv"
 	"webtest/models"
-
+	"time"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/astaxie/beego"
@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"strings"
 	"fmt"
+	"os"
 )
 
 type MainController struct {
@@ -269,7 +270,7 @@ func (c *AdminController) Get() {
 func (c *AdminController) Post() {
 	//IsUserInfo := c.Input().Get("IsUserInfo")
 	//IsUserPsw := c.Input().Get("IsUserPsw")
-	//*************修改用户信息********************8
+	//*************修改用户信息********************
 	Uid := c.Input().Get("uid")
 	UpdataName := c.Input().Get("UpdataName")
 	UpdataTel := c.Input().Get("UpdataTel")
@@ -320,10 +321,86 @@ func (c *AdminController) Post() {
 
 	//************添加类****************
 	addClassName :=c.Input().Get("addClassName")
-	fmt.Println(addClassName)
+	fmt.Println("addClassName："+addClassName)
+	if addClassName !=""{
+		tmpFlag := cheakClass(addClassName)
+		if tmpFlag{
+			models.InsertOne("class","cls_content",addClassName)
+			c.Redirect("/admin?IsClass=1",301)
+		}else {
+			fmt.Println("已有类无法重复添加")
+			c.Redirect("/admin?IsClass=1",301)
+			//c.Ctx.WriteString("已有类无法重复添加。")
+		}
+	}
 
-	models.InsertOne("class","cls_content",addClassName)
 	//************添加类完毕*************
+	//************删除类****************
+	delClassName :=c.Input().Get("delClassName")
+	fmt.Println("delClassName："+delClassName)
+	if delClassName != ""{
+		tmpFlag1 := cheakDelClass(delClassName)
+		if tmpFlag1{
+			models.Remove("class","cls_content",delClassName)
+			c.Redirect("/admin?IsClass=1",301)
+			fmt.Println("可以删除改类")
+		}else {
+			fmt.Println("已有数据类无法删除")
+			c.Redirect("/admin?IsClass=1",301)
+			//c.Ctx.WriteString("已有类无法重复添加。")
+		}
+	}
+	//************删除类完毕*************
+	//************修改类****************
+	updateClassName :=c.Input().Get("updateClassName")
+	sourceClassName :=c.Input().Get("sourceClassName")
+	fmt.Println("updateClassName："+updateClassName)
+	fmt.Println("sourceClassName："+sourceClassName)
+	if sourceClassName != ""{
+		tmpFlag2 := cheakClass(sourceClassName)
+		if !tmpFlag2{
+			models.UpdateOne("class","cls_content",updateClassName,"cls_content",sourceClassName)
+			//c.Redirect("/admin?IsClass=1",301)
+			fmt.Println("已经修改类")
+		}else {
+			fmt.Println("未知错误")
+			c.Redirect("/admin?IsClass=1",301)
+			//c.Ctx.WriteString("已有类无法重复添加。")
+		}
+	}
+	//************修改类完毕*************
+	//************上传文件****************
+	getFiles := c.Input().Get("Options")
+	if getFiles != ""{
+		f, h, err1 := c.GetFile("myfile")
+		if err1 == nil {
+			var path string
+			datePath := time.Now().Format("20060102")
+			dir, _ := os.Getwd()
+			dir = dir+"/upload/"+getFiles+"/"
+			path = dir+datePath
+			URL := "http://localhost:8088/upload/"+datePath
+			//当前的目录
+			if !PathExists(path){
+				err := os.Mkdir(path, os.ModePerm)  //在当前目录下生成md目录
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+			// 设置保存目录
+			//dirPath := "./upload/" + datePath
+			// 设置保存文件名
+			FileName := h.Filename
+			c.SaveToFile("myfile",path+"/"+FileName)
+			c.Ctx.WriteString(URL+"/"+FileName)
+		}
+		content := c.Input().Get("content")
+		fmt.Println(content)
+
+		//c.Redirect("/", 302)
+		defer f.Close()
+	}
+	//************上传文件结束*************
 
 }
 func (c *ListController) Get() {
@@ -347,10 +424,36 @@ func readUsrName(c *AdminController) string {
 	return ck.Value
 }
 
+func cheakClass(insertClass string)bool{
+	//存在的话返回false
+	script := "SELECT * FROM class"
+	tmp := models.ReadDataOne(script)
+	tmpFlag := true
+	for _,v := range tmp{
+		if insertClass == v{
+			tmpFlag = false
+		}
+	}
+	return tmpFlag
+}
+
+func cheakDelClass(delClass string)bool{
+	script := "SELECT max(c.cls_content),  count(a.art_title) count_title FROM class c LEFT JOIN article a ON c.class_id = a.class_id GROUP BY c.class_id"
+	tmp := models.ReadData(script)
+	fmt.Println(tmp)
+	tmpFlag := false
+	for i,_ := range tmp{
+		fmt.Println(tmp[i][0])
+		if delClass == tmp[i][0]{
+			if tmp[i][1] == "0"{
+				fmt.Println(tmp[i][0],tmp[i][1])
+				tmpFlag = true
+			}
+		}
+	}
+	return tmpFlag
+}
 func checkAccount(ctx *HomeController) bool {
-	//func checkAccount() bool {
-	//ck, err := ctx.Request.Cookie("usrname")
-	//	ck, err := beego.Controller.Ctx.Request.Cookie("usrname")
 	var login bool
 	ck, err := ctx.Ctx.Request.Cookie("usrname")
 	if err != nil {
@@ -371,12 +474,20 @@ func checkAccount(ctx *HomeController) bool {
 		if sqlpsw == psw {
 			login = true
 		}
-		//	return beego.AppConfig.String("usrname") == usrname &&
-		//	beego.AppConfig.String("psw") == psw
 	}
 	return login
 }
 func CheckMobile(no string) bool {
 	reg := regexp.MustCompile(`^(13[0-9]|14[57]|15[012356789]|18[0-9])\d{8}$`)
 	return reg.MatchString(no)
+}
+func PathExists(path string) (bool) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	return false
 }
