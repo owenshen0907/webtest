@@ -49,7 +49,49 @@ func InsertOne(tableName,column,value string) {
 	checkErr(err)
 	fmt.Println("已经插入"+value)
 }
+func InsertTwo(tableName,column1,value1,column2,value2 string) {
+	//	stmt, err := db.Prepare(`INSERT user_info (user_name,user_age,user_sex) values (?,?,?)`)
+	script := "INSERT test." + tableName+"("+column1+", "+column2+")values (?,?)"
+	//stmt, err := db.Prepare(`INSERT test.usr_info (uid,email,tel,psw) values (?,?,?,?)`)
+	stmt, err := db.Prepare(script)
 
+	checkErr(err)
+	//	res, err := stmt.Exec("tom", "tomtian@we.com", 15927120431, "123dedcgs")
+	res, err := stmt.Exec(value1,value2)
+	checkErr(err)
+	_, err = res.LastInsertId()
+	checkErr(err)
+	fmt.Println("已经插入"+value1+","+value2)
+}
+func InsertThree(tableName,column1,value1,column2,value2,column3,value3 string) {
+	//	stmt, err := db.Prepare(`INSERT user_info (user_name,user_age,user_sex) values (?,?,?)`)
+	script := "INSERT test." + tableName+"("+column1+", "+column2+", "+column3+")values (?,?,?)"
+	fmt.Println(script)
+	//stmt, err := db.Prepare(`INSERT test.usr_info (uid,email,tel,psw) values (?,?,?,?)`)
+	stmt, err := db.Prepare(script)
+	checkErr(err)
+	//	res, err := stmt.Exec("tom", "tomtian@we.com", 15927120431, "123dedcgs")
+	res, err := stmt.Exec(value1,value2,value3)
+	checkErr(err)
+	_, err = res.LastInsertId()
+	checkErr(err)
+	fmt.Println("已经插入"+value1+","+value2+","+value3)
+}
+
+func InsertFour(tableName,column1,value1,column2,value2,column3,value3 ,column4,value4 string) {
+	//	stmt, err := db.Prepare(`INSERT user_info (user_name,user_age,user_sex) values (?,?,?)`)
+	script := "INSERT test." + tableName+"("+column1+", "+column2+", "+column3+", "+column4+")values (?,?,?,?)"
+	fmt.Println(script)
+	//stmt, err := db.Prepare(`INSERT test.usr_info (uid,email,tel,psw) values (?,?,?,?)`)
+	stmt, err := db.Prepare(script)
+	checkErr(err)
+	//	res, err := stmt.Exec("tom", "tomtian@we.com", 15927120431, "123dedcgs")
+	res, err := stmt.Exec(value1,value2,value3,value4)
+	checkErr(err)
+	_, err = res.LastInsertId()
+	checkErr(err)
+	fmt.Println("已经插入"+value1+","+value2+","+value3)
+}
 //查询demo
 func Query(script string) (value string, isnull int) {
 	rows, err := db.Query(script)

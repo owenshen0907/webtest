@@ -251,9 +251,9 @@ func (c *AdminController) Get() {
 	}
 	c.Data["UsrInfo"] = models.GenerateUsrList(idNum, perPeople)
 	//**********************************************用户列表信息生成完毕**************************************
-	//**************************显示分类表*************************************
+	//**************************显示分类&标签表*************************************
 	c.Data["ClassList"] = models.GenerateClass()
-
+	c.Data["TagList"] = models.GenerateTag()
 	c.Data["ClassListInfo"] = models.GenerateClassList()
 	//**************************显示分类表结束**********************************
 
@@ -370,6 +370,7 @@ func (c *AdminController) Post() {
 	}
 	//************修改类完毕*************
 	//************上传文件****************
+	//选择文件类型
 	getFiles := c.Input().Get("Options")
 	if getFiles != ""{
 		f, h, err1 := c.GetFile("myfile")
@@ -379,7 +380,7 @@ func (c *AdminController) Post() {
 			dir, _ := os.Getwd()
 			dir = dir+"/upload/"+getFiles+"/"
 			path = dir+datePath
-			URL := "http://localhost:8088/upload/"+datePath
+			URL := "/upload/"+getFiles+"/"+datePath
 			//当前的目录
 			if !PathExists(path){
 				err := os.Mkdir(path, os.ModePerm)  //在当前目录下生成md目录
@@ -392,10 +393,21 @@ func (c *AdminController) Post() {
 			// 设置保存文件名
 			FileName := h.Filename
 			c.SaveToFile("myfile",path+"/"+FileName)
-			c.Ctx.WriteString(URL+"/"+FileName)
+			fmt.Println(URL+"/"+FileName)
+			URL = URL +"/"+FileName
+			classname := c.Input().Get("selectClassName")
+			class_id_script := "select class_id from class where cls_content = '"+classname+"'"
+			class_id := models.ReadDataOne(class_id_script)
+			tagname := c.Input().Get("selectTagName")
+			tag_id_script := "select tag_id from tag where tag_content = '"+tagname+"'"
+			tag_id := models.ReadDataOne(tag_id_script)
+			title := c.Input().Get("resourceTitle")
+			fmt.Println(title+class_id[0],tag_id[0])
+			models.InsertFour("resource","title",title,"class_id",class_id[0],"tag_id",tag_id[0],"url",URL)
+			//c.Ctx.WriteString(URL+"/"+FileName)
 		}
-		content := c.Input().Get("content")
-		fmt.Println(content)
+		//content := c.Input().Get("content")
+
 
 		//c.Redirect("/", 302)
 		defer f.Close()

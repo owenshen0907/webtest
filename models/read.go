@@ -139,6 +139,22 @@ func GenerateClass()string{
 
 	return ret.String()
 }
+
+func GenerateTag()string{
+	script := "SELECT tag_content FROM tag"
+	tmp := ReadDataOne(script)
+	var ret bytes.Buffer = bytes.Buffer{}
+	////<option>分类1</option>
+
+	for i:=0 ; i< len(tmp);{
+		ret.WriteString("<option>"+tmp[i]+"</option>")
+		i++
+	}
+	//fmt.Println(tmp)
+
+	return ret.String()
+}
+
 func ReadData(script string) [][]string { //返回多列数据
 	var DBdata [][]string
 	rows, _ := db.Query(script)
